@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AURORA 9.0 — Colony Strategy</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071016;color:#eef5f2;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit;border:0;cursor:pointer} .app{max-width:1100px;margin:auto;min-height:100vh;background:linear-gradient(#09141b,#071016)}
+header{padding:14px 16px 10px;position:sticky;top:0;background:#09141bf2;backdrop-filter:blur(12px);z-index:10;border-bottom:1px solid #1d3038}
+.brand{display:flex;justify-content:space-between;align-items:center}.brand h1{margin:0;font-size:21px;letter-spacing:2px}.sub{font-size:10px;color:#7f9ba5;letter-spacing:1.5px}
+.wallet{background:#10232b;border:1px solid #29434d;padding:9px 12px;border-radius:12px;text-align:right}.wallet b{font-size:15px}.wallet small{display:block;color:#7f9ba5}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:12px}.stat{background:#0d1c23;border:1px solid #1b3038;border-radius:10px;padding:8px}.stat span{display:block;color:#718e97;font-size:9px;text-transform:uppercase}.stat b{font-size:13px}
+main{padding:12px 12px 90px}.mapbox{position:relative;background:#0a171d;border:1px solid #20363f;border-radius:18px;overflow:hidden;height:530px;box-shadow:0 15px 50px #0005}
+.maptitle{position:absolute;z-index:2;left:15px;top:14px}.maptitle b{font-size:13px}.maptitle div{font-size:10px;color:#79939c;margin-top:3px}
+.map{position:absolute;inset:0;background:
+radial-gradient(circle at 50% 45%,#18313a 0,#0c2028 30%,#08151b 68%),
+linear-gradient(135deg,transparent 49%,#173039 50%,transparent 51%);
+overflow:hidden}
+.gridline{position:absolute;inset:-20%;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:55px 55px;transform:rotate(10deg)}
+.road{position:absolute;height:5px;background:#c7a95d;border-radius:5px;transform-origin:left center;box-shadow:0 0 10px #c7a95d88;z-index:1}
+.territory{position:absolute;width:94px;height:78px;clip-path:polygon(20% 0,80% 5%,100% 50%,78% 95%,23% 100%,0 50%);background:#142a32;border:0;display:flex;align-items:center;justify-content:center;z-index:3;transition:.18s}
+.territory:after{content:"";position:absolute;inset:4px;clip-path:inherit;background:#10242b}.territory .inner{position:relative;z-index:2;text-align:center;font-size:10px}.territory .icon{font-size:21px}.territory small{display:block;color:#9ab0b7;font-size:8px;margin-top:2px}.territory.owned{background:#56c8aa}.territory.owned:after{background:#12352f}.territory.city{width:112px;height:92px;background:#e6b95d}.territory.city:after{background:#382d17}.territory.available{background:#35535b}.territory.selected{filter:brightness(1.45);outline:2px solid #fff}.territory.locked{opacity:.42}
+.legend{position:absolute;bottom:13px;left:13px;right:13px;background:#071217dc;border:1px solid #20343c;border-radius:12px;padding:9px;display:flex;gap:13px;font-size:9px;color:#8ea5ad;z-index:5}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;background:#56c8aa}.dot.a{background:#35535b}.dot.c{background:#e6b95d}
+.panel{margin-top:12px;background:#0d1c23;border:1px solid #20363f;border-radius:16px;padding:14px}.panel h2{font-size:16px;margin:0 0 4px}.muted{color:#78919a;font-size:11px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.chip{padding:6px 8px;background:#132830;border-radius:8px;font-size:10px}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.btn{padding:12px;border-radius:11px;background:#18343d;border:1px solid #2a4b55;font-weight:700;font-size:12px}.btn.primary{background:#c8a85b;color:#10140f;border-color:#e0c77f}.btn.red{background:#412b2b}.btn:disabled{opacity:.35;cursor:not-allowed}
+.section{margin-top:12px}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.sectionhead b{font-size:13px}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.card{background:#0d1c23;border:1px solid #20363f;border-radius:13px;padding:11px}.card b{font-size:12px}.card p{margin:5px 0;color:#839aa2;font-size:10px;line-height:1.35}.price{font-size:12px;color:#d9bd6b}.progress{height:6px;background:#13252c;border-radius:5px;overflow:hidden;margin-top:7px}.progress i{display:block;height:100%;background:#59c9aa}
+.log{max-height:150px;overflow:auto;font-size:10px;color:#8299a2}.log div{padding:6px 0;border-bottom:1px solid #15272e}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(1100px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#09141bf5;border-top:1px solid #20343b;backdrop-filter:blur(14px);z-index:20;padding-bottom:env(safe-area-inset-bottom)}nav button{background:none;padding:10px 4px;color:#728b94;font-size:10px}nav button.active{color:#e6c36e}nav strong{display:block;font-size:17px;margin-bottom:2px}
+.modal{position:fixed;inset:0;background:#0009;z-index:30;display:none;align-items:flex-end}.modal.open{display:flex}.sheet{background:#0c1b22;border:1px solid #29414a;width:min(700px,100%);margin:auto auto 0;border-radius:20px 20px 0 0;padding:17px;max-height:85vh;overflow:auto}.sheet h2{margin:0 0 8px}.close{float:right;background:#1a2d34;border-radius:8px;padding:6px 9px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1b3037;font-size:12px}
+@media(min-width:760px){main{display:grid;grid-template-columns:1.45fr .85fr;gap:12px}.mapbox{height:650px}.right{display:block}.panel{margin-top:0}.cards{grid-template-columns:1fr 1fr}}
+
+.npc{background:#152a31!important;border:1px solid #54706e!important}
+.npc:after{background:#102329!important}
+.trade-route{position:absolute;height:7px;background:#74b9d0;border-radius:8px;z-index:2;box-shadow:0 0 12px #74b9d066}
+.routebadge{position:absolute;z-index:6;background:#16323b;border:1px solid #365b65;border-radius:8px;padding:4px 7px;font-size:8px;color:#a9d5df}
+.company{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#10232a;border:1px solid #213c45;border-radius:11px;padding:10px;margin:7px 0}
+.company b{font-size:11px}.company small{color:#78939c}.positive{color:#64d2ae}.negative{color:#e29a8f}
+.marketgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.marketitem{background:#10232a;border:1px solid #203a43;border-radius:11px;padding:10px}
+.marketitem b{font-size:11px}.marketitem .big{font-size:16px;margin:3px 0}
+.ticker{font-size:9px;color:#78939c;margin-top:4px}
+
+.workers{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.job{background:#10232a;border:1px solid #203d46;border-radius:11px;padding:10px}
+.job b{font-size:11px}.job small{display:block;color:#78939c;margin-top:3px}.job strong{display:block;margin-top:6px}
+.job button{margin-top:7px;padding:7px 9px;border-radius:8px;background:#19353e;font-size:10px}
+.factory{background:#0e2027;border:1px solid #29444d;border-radius:12px;padding:11px;margin:7px 0}
+.factory .top{display:flex;justify-content:space-between;align-items:center}.factory p{font-size:9px;color:#78939c;margin:5px 0}.tag{font-size:8px;padding:4px 6px;border-radius:6px;background:#17323a}
+
+.special{display:grid;grid-template-columns:1fr 1fr;gap:7px}.spec{background:#10232a;border:1px solid #23424b;border-radius:11px;padding:10px}.spec b{font-size:11px}.spec small{display:block;color:#78939c;margin-top:4px;line-height:1.3}.spec button{margin-top:7px;padding:7px 9px;border-radius:8px;background:#19353e;font-size:10px}.demand{display:grid;grid-template-columns:1fr 1fr;gap:7px}.demand .marketitem{padding:9px}.trend{font-size:9px}.up{color:#69d3af}.down{color:#e19a91}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="brand"><div><h1>AURORA</h1><div class="sub">COLONIZATION STRATEGY · SECTOR 09</div></div><div class="wallet"><small>AUR</small><b id="aur">0</b></div></div>
+ <div class="stats">
+  <div class="stat"><span>День</span><b id="day">1</b></div><div class="stat"><span>Население</span><b id="pop">12</b></div>
+  <div class="stat"><span>Еда</span><b id="food">0</b></div><div class="stat"><span>Энергия</span><b id="energy">0</b></div>
+  <div class="stat"><span>Рабочие</span><b id="workers">0/0</b></div><div class="stat"><span>Хранилище</span><b id="store">0/300</b></div>
+ </div>
+</header>
+
+<main>
+<section>
+ <div class="mapbox">
+  <div class="maptitle"><b>РЕГИОН AURORA</b><div id="maphint">Выберите соседнюю территорию для колонизации</div></div>
+  <div class="map" id="map"><div class="gridline"></div></div>
+  <div class="legend"><span><i class="dot"></i>ваша земля</span><span><i class="dot a"></i>свободна</span><span><i class="dot c"></i>город</span></div>
+ </div>
+ <div class="panel" id="selected"></div>
+</section>
+
+<section class="right">
+ <div class="panel">
+  <div class="sectionhead"><b>ПРОИЗВОДСТВО</b><span class="muted">автоматически каждый день</span></div>
+  <div class="cards" id="production"></div>
+ </div>
+ <div class="panel section">
+  <div class="sectionhead"><b>ЭКОНОМИКА</b><span class="price" id="daily">+0 AUR/день</span></div>
+  <div class="cards">
+   <div class="card"><b>Налоги</b><p>Города приносят AUR за население.</p><strong id="tax">0 AUR</strong></div>
+   <div class="card"><b>Содержание</b><p>Здания и дороги требуют энергии.</p><strong id="cost">0 AUR</strong></div>
+  </div>
+ </div>
+ 
+<div class="panel section">
+ <div class="sectionhead"><b>МИРНАЯ ЭКОНОМИКА</b><span class="positive">без войн</span></div>
+ <div class="cards">
+  <div class="card"><b>🤝 Торговые партнёры</b><p>NPC-города покупают излишки и продают дефицит.</p><button class="btn primary" onclick="openPartners()">Открыть</button></div>
+  <div class="card"><b>🚚 Маршруты</b><p>Соединяйте города дорогами и зарабатывайте на перевозках.</p><button class="btn primary" onclick="openRoutes()">Открыть</button></div>
+ </div>
+</div>
+
+
+<div class="panel section">
+ <div class="sectionhead"><b>🏙️ СПЕЦИАЛИЗАЦИЯ ГОРОДА</b><span class="muted">выбери экономический профиль</span></div>
+ <div id="specialization"></div>
+</div>
+<div class="panel section">
+ <div class="sectionhead"><b>📈 СПРОС РЫНКА</b><span class="muted">NPC меняют цены</span></div>
+ <div id="demand"></div>
+</div>
+<div class="panel section">
+ <div class="sectionhead"><b>👷 РАБОЧАЯ СИЛА</b><span class="muted">люди работают в зданиях</span></div>
+ <div id="workforce"></div>
+</div>
+<div class="panel section">
+ <div class="sectionhead"><b>🏭 ПРЕДПРИЯТИЯ</b><span class="muted">стройка → рабочие → товар</span></div>
+ <div id="factories"></div>
+</div>
+<div class="panel section">
+ <div class="sectionhead"><b>ПРОМЫШЛЕННОСТЬ</b><span class="muted">цепочки производства</span></div>
+ <div id="industry"></div>
+</div>
+<div class="panel section"><div class="sectionhead"><b>ЖУРНАЛ</b><button class="btn" style="padding:5px 8px" onclick="newGame()">Новая игра</button></div><div class="log" id="log"></div></div>
+</section>
+</main>
+<nav>
+ <button class="active" onclick="focusMap()"><strong>⌖</strong>Мир</button>
+ <button onclick="openCity()"><strong>⌂</strong>Города</button>
+ <button onclick="openMarket()"><strong>¤</strong>Рынок</button>
+ <button onclick="nextDay()"><strong>▶</strong>Следующий день</button>
+</nav>
+
+<div class="modal" id="modal"><div class="sheet"><button class="close" onclick="closeModal()">✕</button><div id="modalBody"></div></div></div>
+</div>
+
+<script>
+const TYPES={
+ forest:{name:"Лес",icon:"🌲",out:"wood",label:"Древесина",regen:4},
+ mountain:{name:"Горы",icon:"⛰️",out:"stone",label:"Камень",regen:0},
+ mine:{name:"Рудник",icon:"⛏️",out:"ore",label:"Руда",regen:0},
+ plain:{name:"Равнина",icon:"🌾",out:"food",label:"Еда",regen:7},
+ energy:{name:"Энергозона",icon:"⚡",out:"energy",label:"Энергия",regen:0},
+ crystal:{name:"Кристаллы",icon:"💎",out:"crystal",label:"Кристалл",regen:0},
+ water:{name:"Вода",icon:"💧",out:"water",label:"Вода",regen:5}
+};
+const names=["Северный лес","Каменный хребет","Рудная жила","Зелёные поля","Энергетический узел","Кристальный каньон","Озёрный край","Западный лес","Восточные рудники","Южные поля","Туманная вода","Красный хребет","Солнечная зона","Северные кристаллы","Большая равнина","Долина металла","Лесной пояс","Водный рубеж","Старый рудник","Золотой берег"];
+const pos=[[50,43],[28,28],[71,28],[28,51],[72,51],[35,72],[62,73],[14,43],[86,42],[16,67],[84,67],[50,19],[50,67],[29,16],[71,16],[14,26],[86,25],[14,82],[86,82],[50,88]];
+const typeList=["plain","forest","mountain","mine","energy","crystal","water","forest","mine","plain","water","mountain","energy","crystal","plain","forest","mine","water","mountain","crystal"];
+const neighbors=[
+[1,3,4,11,12],[0,2,3,7,11,13,15],[0,4,8,11,14,16],[0,1,5,7,9,12],[0,2,6,8,12,14],[3,6,9,12,17,19],[4,5,10,12,18,19],[1,3,9,15,17],[2,4,10,16,18],[3,5,7,10,17,19],[4,6,8,9,18,19],[0,1,2,13,14],[0,3,4,5,6,19],[1,11,14,15,16],[2,11,12,13,16],[1,7,13,16,17],[2,8,13,14,15,18],[5,7,9,10,15,18,19],[6,8,10,16,17,19],[5,6,9,12,17,18]
+];
+let S=load()||{
+ day:1,aur:900,pop:12,food:90,energy:55,wood:55,stone:45,ore:20,metal:5,parts:0,crystal:2,water:70,
+ storage:300, selected:0, territories:[0], cities:[], buildings:{}, stock:{}, roads:[], log:[]
+};
+if(!S.buildings)S.buildings={}; if(!S.cities)S.cities=[]; if(!S.roads)S.roads=[]; if(!S.contracts)S.contracts=[]; if(S.parts==null)S.parts=0; if(!S.factories)S.factories=[]; if(S.jobs==null)S.jobs={}; if(!S.citySpecs)S.citySpecs={}; if(!S.demand)S.demand={};
+const prices={wood:4,stone:5,ore:8,metal:18,parts:32,food:5,energy:7,crystal:55,water:3};
+function save(){localStorage.setItem("aurora90",JSON.stringify(S))}
+function load(){try{return JSON.parse(localStorage.getItem("aurora90"))}catch(e){return null}}
+function fmt(n){return Math.floor(n).toLocaleString("ru-RU")}
+function log(t){S.log.unshift("День "+S.day+" — "+t);S.log=S.log.slice(0,30)}
+function owned(i){return S.territories.includes(i)}
+function cityAt(i){return S.cities.find(c=>c.territory===i)}
+function connected(i){return neighbors[i].some(owned)}
+function buildCount(i){return (S.buildings[i]||[]).length}
+function render(){
+ document.getElementById("aur").textContent=fmt(S.aur);document.getElementById("day").textContent=S.day;
+ document.getElementById("pop").textContent=fmt(S.pop);document.getElementById("food").textContent=fmt(S.food);
+ document.getElementById("energy").textContent=fmt(S.energy);
+ let used=S.wood+S.stone+S.ore+S.metal+S.parts+S.food+S.energy+S.crystal+S.water;document.getElementById("store").textContent=fmt(used)+"/"+S.storage;
+ drawMap();selected();production();economy();industry();workforce();factories();citySpec();demandView();save();
+ document.getElementById("log").innerHTML=S.log.map(x=>"<div>"+x+"</div>").join("");
+}
+function drawMap(){
+ const m=document.getElementById("map");m.querySelectorAll(".territory,.road").forEach(x=>x.remove());
+ const scaleX= m.clientWidth/100, scaleY=m.clientHeight/100;
+ S.roads.forEach(r=>{let a=pos[r[0]],b=pos[r[1]],x1=a[0]*scaleX,y1=a[1]*scaleY,x2=b[0]*scaleX,y2=b[1]*scaleY,dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+  let e=document.createElement("div");e.className="road";e.style.left=x1+"px";e.style.top=y1+"px";e.style.width=l+"px";e.style.transform=`rotate(${ang}deg)`;m.appendChild(e)});
+ pos.forEach((p,i)=>{let t=TYPES[typeList[i]],e=document.createElement("button");e.className="territory "+(owned(i)?"owned":"available")+(cityAt(i)?" city":"")+(S.selected===i?" selected":"")+(connected(i)||owned(i)?"":" locked");
+ e.style.left=`calc(${p[0]}% - 47px)`;e.style.top=`calc(${p[1]}% - 39px)`;e.innerHTML=`<div class="inner"><div class="icon">${cityAt(i)?"🏙️":t.icon}</div><b>${cityAt(i)?cityAt(i).name:t.name}</b><small>${owned(i)?t.label:"доступно"}</small></div>`;
+ e.onclick=()=>{S.selected=i;render()};m.appendChild(e)});
+}
+function selected(){
+ let i=S.selected,t=TYPES[typeList[i]],c=cityAt(i),o=owned(i),adj=connected(i);
+ let title=c?c.name:names[i];let body=`<h2>${t.icon} ${title}</h2><div class="muted">${t.name} · ${t.label}</div>`;
+ body+=`<div class="chips"><span class="chip">Производство: +${productionRate(i)} ${t.label}</span><span class="chip">Соседей: ${neighbors[i].length}</span>${o?`<span class="chip">Земля №${i+1}</span>`:""}</div>`;
+ if(o){
+   body+=`<div class="muted">Запас ресурса: ${resourceStock(i)} ед.</div><div class="actions" style="margin-top:10px">`;
+   body+=`<button class="btn primary" onclick="openBuild(${i})">🏗 Построить</button>`;
+   if(!c && canCity(i))body+=`<button class="btn" onclick="foundCity(${i})">🏙 Основать город</button>`;
+   else if(c)body+=`<button class="btn" onclick="roadMenu(${i})">🛣 Построить дорогу</button>`;
+   body+=`</div>`;
+ }else if(adj){
+   let cost=landCost(i);body+=`<div class="muted" style="margin:8px 0">Новая территория связана с вашей колонией.</div><div class="actions"><button class="btn primary" onclick="buyLand(${i})">Захватить · ${cost} AUR</button></div>`;
+ }else body+=`<div class="muted" style="margin-top:8px">Сначала освойте соседнюю территорию.</div>`;
+ document.getElementById("selected").innerHTML=body;
+}
+
+function openNPC(name,k){
+ const wants=[["Еда","food",5],["Древесина","wood",4],["Металл","metal",18]][k%3];
+ const sells=[["Камень","stone",5],["Энергия","energy",7],["Вода","water",3]][k%3];
+ document.getElementById("modalBody").innerHTML=`<h2>🏙 ${name}</h2>
+ <p class="muted">Мирный торговый город. У него нет армии — только производство и торговля.</p>
+ <div class="company"><div><b>Покупает</b><br><small>${wants[0]} · ${wants[2]} AUR/ед.</small></div><button class="btn primary" onclick="tradeNPC('${wants[1]}',${wants[2]},${k})">Продать 20</button></div>
+ <div class="company"><div><b>Продаёт</b><br><small>${sells[0]} · ${sells[2]} AUR/ед.</small></div><button class="btn primary" onclick="buyNPC('${sells[1]}',${sells[2]},${k})">Купить 20</button></div>
+ <div class="company"><div><b>Договор</b><br><small>Постоянный маршрут даёт бонус к торговле.</small></div><button class="btn" onclick="signContract('${name}',${k})">Заключить</button></div>`;
+ document.getElementById("modal").classList.add("open");
+}
+function tradeNPC(k,p,kid){
+ if((S[k]||0)<20)return;
+ S[k]-=20; S.aur+=p*20*(1+S.roads.length*.02); log("Торговля с NPC: продано 20 "+label(k)); openMarket(); render();
+}
+function buyNPC(k,p,kid){
+ let c=p*20;if(S.aur<c)return;
+ S.aur-=c;S[k]=(S[k]||0)+20;log("Торговля с NPC: куплено 20 "+label(k)); openMarket(); render();
+}
+function signContract(name,k){
+ S.aur=Math.max(0,S.aur-100); S.contracts=(S.contracts||[]); if(!S.contracts.includes(name))S.contracts.push(name);
+ log("Заключён торговый договор с "+name); closeModal(); render();
+}
+function openPartners(){
+ let contracts=S.contracts||[];
+ document.getElementById("modalBody").innerHTML=`<h2>🤝 Торговые партнёры</h2>
+ <p class="muted">NPC-колонии развиваются независимо и создают спрос. Заключайте мирные торговые договоры.</p>
+ ${["Люмен","Элизиум","Нова-Терра"].map((n,i)=>`<div class="company"><div><b>🏙 ${n}</b><br><small>${contracts.includes(n)?"Договор активен":"Доступен договор"}</small></div><button class="btn ${contracts.includes(n)?"":"primary"}" onclick="openNPC('${n}',${i})">${contracts.includes(n)?"Торговля":"Открыть"}</button></div>`).join("")}`;
+ document.getElementById("modal").classList.add("open");
+}
+function openRoutes(){
+ document.getElementById("modalBody").innerHTML=`<h2>🚚 Торговые маршруты</h2>
+ <p class="muted">Каждая дорога между вашими территориями снижает стоимость логистики. После договора с NPC маршрут приносит дополнительный доход.</p>
+ <div class="company"><div><b>Логистический бонус</b><br><small>+2% к доходу от торговли за дорогу</small></div><strong class="positive">${S.roads.length*2}%</strong></div>
+ <div class="company"><div><b>Активные договоры</b><br><small>${(S.contracts||[]).length} торговых партнёра</small></div><strong>${(S.contracts||[]).length}</strong></div>`;
+ document.getElementById("modal").classList.add("open");
+}
+function industry(){
+ let metal=Math.floor(Math.min(S.ore/2,S.energy/3)), parts=Math.floor(Math.min(S.metal/2,S.wood/2));
+ document.getElementById("industry").innerHTML=`
+ <div class="company"><div><b>⛏ Руда → металл</b><br><small>2 руды + 3 энергии</small></div><button class="btn primary" onclick="refineMetal()">Произвести ${metal}</button></div>
+ <div class="company"><div><b>⚙ Металл + дерево → детали</b><br><small>2 металла + 2 дерева</small></div><button class="btn primary" onclick="makeParts()">Произвести ${parts}</button></div>
+ <div class="company"><div><b>🏭 Детали → строительный фонд</b><br><small>Используется для крупных городских проектов</small></div><strong>${S.parts||0}</strong></div>`;
+}
+function refineMetal(){
+ let n=Math.floor(Math.min(S.ore/2,S.energy/3));if(n<1)return;S.ore-=n*2;S.energy-=n*3;S.metal+=n;log("Металлургия: произведено "+n+" металла");render();
+}
+function makeParts(){
+ let n=Math.floor(Math.min(S.metal/2,S.wood/2));if(n<1)return;S.metal-=n*2;S.wood-=n*2;S.parts=(S.parts||0)+n;log("Машиностроение: произведено "+n+" деталей");render();
+}
+
+function resourceStock(i){let key=TYPES[typeList[i]].out;return S.stock[i]??(key==="food"||key==="energy"||key==="water"?999:120)}
+function productionRate(i){let t=typeList[i],b=buildCount(i);let base={forest:8,mountain:7,mine:5,plain:10,energy:9,crystal:2,water:8}[t];return base+b*3}
+function landCost(i){return 120+S.territories.length*55}
+function buyLand(i){
+ if(!connected(i)||S.aur<landCost(i))return;
+ S.aur-=landCost(i);S.territories.push(i);S.stock[i]=120;log("Освоена территория «"+names[i]+"»");render()
+}
+function canCity(i){return !cityAt(i)&&S.territories.filter(x=>neighbors[i].includes(x)).length>=2&&S.aur>=260&&S.wood>=35&&S.stone>=30&&S.food>=40}
+function foundCity(i){
+ if(!canCity(i))return;S.aur-=260;S.wood-=35;S.stone-=30;S.food-=40;let c={territory:i,name:"Нова "+(S.cities.length+1),level:1};
+ S.cities.push(c);S.citySpecs[i]="trading";S.pop+=8;S.storage+=150;log("Основан город «"+c.name+"»");render()
+}
+function openBuild(i){
+ let t=typeList[i], opts=[];
+ if(t==="forest")opts.push(["Лесной комплекс","wood",45,25,0]);
+ if(t==="plain")opts.push(["Ферма","food",35,20,0]);
+ if(t==="mountain")opts.push(["Каменоломня","stone",40,35,0]);
+ if(t==="mine")opts.push(["Металлургический цех","metal",65,35,12]);
+ if(t==="energy")opts.push(["Энергостанция","energy",45,30,0]);
+ if(t==="crystal")opts.push(["Кристальный комбинат","crystal",70,40,0]);
+ if(t==="water")opts.push(["Водный комплекс","water",40,25,0]);
+ opts.push(["Склад","+storage",55,30,0]);
+ document.getElementById("modalBody").innerHTML="<h2>🏗 Строительство</h2>"+opts.map((o,j)=>`<div class="row"><div><b>${o[0]}</b><div class="muted">Стоимость: ${o[2]} AUR · ${o[3]} дерева</div></div><button class="btn primary" onclick="construct(${i},${j},'${o[1]}',${o[2]},${o[3]},${o[4]})">Построить</button></div>`).join("");
+ document.getElementById("modal").classList.add("open")
+}
+function construct(i,j,out,cost,wood,ore){
+ if(S.aur<cost||S.wood<wood||S.ore<ore)return;
+ S.aur-=cost;S.wood-=wood;S.ore-=ore;(S.buildings[i]??=[]).push(out);
+ if(out==="+storage")S.storage+=100;
+ log("Построено: "+out+" на территории «"+names[i]+"»");closeModal();render()
+}
+function roadMenu(i){
+ let targets=S.territories.filter(x=>x!==i&&neighbors[i].includes(x)&&!S.roads.some(r=>(r[0]===i&&r[1]===x)||(r[1]===i&&r[0]===x)));
+ document.getElementById("modalBody").innerHTML="<h2>🛣 Дорога</h2><p class='muted'>Дороги соединяют города и снижают стоимость торговли.</p>"+targets.map(x=>`<div class="row"><b>${names[x]}</b><button class="btn primary" onclick="buildRoad(${i},${x})">90 AUR</button></div>`).join("")||"<p class='muted'>Нет новых соседних направлений.</p>";
+ document.getElementById("modal").classList.add("open")
+}
+function buildRoad(a,b){if(S.aur<90)return;S.aur-=90;S.roads.push([a,b]);log("Построена дорога");closeModal();render()}
+
+const ENTERPRISES={
+ sawmill:{name:"Лесопилка",icon:"🪵",workers:3,cost:180,wood:15,stone:10,inputs:{wood:5},output:"parts",amount:3,desc:"Перерабатывает древесину в детали."},
+ farm:{name:"Агрокомплекс",icon:"🌾",workers:4,cost:160,wood:10,stone:15,inputs:{water:3},output:"food",amount:18,desc:"Производит еду при наличии воды."},
+ foundry:{name:"Металлургический завод",icon:"🏭",workers:6,cost:350,wood:20,stone:30,inputs:{ore:6,energy:8},output:"metal",amount:4,desc:"Плавит руду в металл."},
+ crystal:{name:"Кристальный завод",icon:"💎",workers:5,cost:420,wood:15,stone:20,inputs:{crystal:2,energy:6},output:"parts",amount:5,desc:"Создаёт высокотехнологичные детали."},
+ power:{name:"Энергостанция",icon:"⚡",workers:3,cost:250,wood:20,stone:25,inputs:{},output:"energy",amount:20,desc:"Увеличивает энергетический баланс."},
+ waterplant:{name:"Водный завод",icon:"💧",workers:3,cost:190,wood:10,stone:15,inputs:{energy:3},output:"water",amount:18,desc:"Очищает и подаёт воду."}
+};
+
+const SPECS={
+ industrial:{name:"Промышленный",icon:"🏭",desc:"Бонус к металлургии и деталям.",bonus:"metal",mult:1.35},
+ farming:{name:"Аграрный",icon:"🌾",desc:"Бонус к еде и воде.",bonus:"food",mult:1.35},
+ trading:{name:"Торговый",icon:"🚚",desc:"Больше дохода от торговли и договоров.",bonus:"aur",mult:1.35},
+ scientific:{name:"Научный",icon:"🔬",desc:"Бонус к кристаллам и технологическим деталям.",bonus:"parts",mult:1.35}
+};
+function citySpec(){
+ let cs=S.cities.map(c=>{let s=S.citySpecs[c.territory]||"trading";return `<div class="spec"><b>${SPECS[s].icon} ${c.name}</b><small>${SPECS[s].name}<br>${SPECS[s].desc}</small><button onclick="chooseSpec(${c.territory})">Изменить профиль</button></div>`}).join("");
+ document.getElementById("specialization").innerHTML=cs||"<div class='muted'>Сначала основайте город.</div>";
+}
+function chooseSpec(i){
+ let c=cityAt(i);if(!c)return;
+ document.getElementById("modalBody").innerHTML="<h2>🏙️ "+c.name+"</h2><p class='muted'>Специализация определяет экономический бонус города.</p>"+
+ Object.entries(SPECS).map(([k,v])=>`<div class="company"><div><b>${v.icon} ${v.name}</b><br><small>${v.desc}</small></div><button class="btn primary" onclick="setSpec(${i},'${k}')">Выбрать</button></div>`).join("");
+ document.getElementById("modal").classList.add("open");
+}
+function setSpec(i,s){S.citySpecs[i]=s;log("Город "+cityAt(i).name+" стал "+SPECS[s].name+"м");closeModal();render()}
+function specBonus(resource){
+ let mult=1;
+ S.cities.forEach(c=>{let s=S.citySpecs[c.territory];if(!s)return;if(SPECS[s].bonus===resource)mult*=SPECS[s].mult});
+ return mult;
+}
+function demandView(){
+ let keys=["food","wood","stone","ore","metal","parts","energy","crystal","water"];
+ document.getElementById("demand").innerHTML=keys.map(k=>{
+  let d=S.demand[k]??50, p=prices[k], trend=d>60?"▲ высокий":d<40?"▼ низкий":"● стабильный";
+  return `<div class="marketitem"><b>${label(k)}</b><div class="big">${p} AUR</div><div class="trend ${d>60?"up":d<40?"down":""}">${trend} · спрос ${d}%</div></div>`
+ }).join("");
+}
+function updateDemand(){
+ ["food","wood","stone","ore","metal","parts","energy","crystal","water"].forEach(k=>{
+  let base=50+(Math.random()*50-25);
+  if((S[k]||0)<30)base+=20;
+  if((S[k]||0)>180)base-=20;
+  S.demand[k]=Math.max(15,Math.min(95,Math.round(base)));
+  prices[k]=Math.max(2,Math.round(prices[k]*(0.88+S.demand[k]/500)));
+ });
+}
+
+function totalWorkers(){return S.pop}
+function employed(){return Object.values(S.jobs).reduce((a,b)=>a+b,0)}
+function factoryCount(type){return S.factories.filter(f=>f.type===type).length}
+function openFactoryBuild(){
+ let body="<h2>🏭 Построить предприятие</h2><p class='muted'>Предприятия требуют AUR и материалов. После строительства им нужны рабочие.</p>";
+ Object.entries(ENTERPRISES).forEach(([k,e])=>{
+  body+=`<div class="factory"><div class="top"><b>${e.icon} ${e.name}</b><span class="tag">${e.workers} рабочих</span></div><p>${e.desc}</p><small>Цена: ${e.cost} AUR · дерево ${e.wood} · камень ${e.stone}</small><br><button class="btn primary" onclick="buildFactory('${k}')">Построить</button></div>`;
+ });
+ document.getElementById("modalBody").innerHTML=body;document.getElementById("modal").classList.add("open")
+}
+function buildFactory(type){
+ let e=ENTERPRISES[type];
+ if(S.aur<e.cost||S.wood<e.wood||S.stone<e.stone)return;
+ S.aur-=e.cost;S.wood-=e.wood;S.stone-=e.stone;
+ S.factories.push({type,level:1});
+ S.jobs[type]=(S.jobs[type]||0)+Math.min(e.workers,Math.max(0,S.pop-employed()));
+ log("Построено предприятие: "+e.name);closeModal();render()
+}
+function workforce(){
+ let free=Math.max(0,S.pop-employed());
+ document.getElementById("workers").textContent=employed()+"/"+S.pop;
+ let rows=Object.entries(ENTERPRISES).map(([k,e])=>{
+  let n=factoryCount(k), need=n*e.workers, assigned=S.jobs[k]||0;
+  return `<div class="job"><b>${e.icon} ${e.name}</b><small>Предприятий: ${n} · нужно ${need}</small><strong>${assigned}/${need} рабочих</strong><button onclick="assignWorkers('${k}')">Назначить +1</button></div>`
+ }).join("");
+ document.getElementById("workforce").innerHTML=`<div class="muted" style="margin-bottom:8px">Свободных работников: ${free}</div><div class="workers">${rows}</div>`;
+}
+function assignWorkers(type){
+ let e=ENTERPRISES[type],need=factoryCount(type)*e.workers,assigned=S.jobs[type]||0;
+ if(assigned>=need||employed()>=S.pop)return;
+ S.jobs[type]=assigned+1;log("Рабочий назначен: "+e.name);render()
+}
+function factories(){
+ let body="";
+ S.factories.forEach((f,i)=>{
+  let e=ENTERPRISES[f.type], assigned=S.jobs[f.type]||0, active=assigned>=e.workers;
+  body+=`<div class="factory"><div class="top"><b>${e.icon} ${e.name}</b><span class="tag">${active?"РАБОТАЕТ":"НЕПОЛНЫЙ ШТАТ"}</span></div><p>Рабочие: ${assigned}/${e.workers} · выпуск: ${active?e.amount:0} ${label(e.output)}/день</p><div class="progress"><i style="width:${Math.min(100,assigned/e.workers*100)}%"></i></div></div>`;
+ });
+ body+=`<button class="btn primary" style="width:100%;margin-top:5px" onclick="openFactoryBuild()">+ Построить предприятие</button>`;
+ document.getElementById("factories").innerHTML=body;
+}
+function runFactories(){
+ S.factories.forEach(f=>{
+  let e=ENTERPRISES[f.type], assigned=S.jobs[f.type]||0;
+  if(assigned<e.workers)return;
+  for(let k in e.inputs){let need=e.inputs[k];if((S[k]||0)<need)return}
+  for(let k in e.inputs)S[k]-=e.inputs[k];
+  S[e.output]=(S[e.output]||0)+Math.max(1,Math.floor(e.amount*specBonus(e.output)));
+ });
+}
+
+function production(){
+ let rows=[];let totals={wood:0,stone:0,ore:0,food:0,energy:0,crystal:0,water:0};
+ S.territories.forEach(i=>{let k=TYPES[typeList[i]].out,r=productionRate(i);if(totals[k]!=null)totals[k]+=r});
+ Object.entries(totals).forEach(([k,v])=>{if(v)rows.push(`<div class="card"><b>${TYPES[Object.keys(TYPES).find(x=>TYPES[x].out===k)]?.icon||"⚙"} ${label(k)}</b><p>Базовое производство всех ваших территорий.</p><strong>+${v}/день</strong><div class="progress"><i style="width:${Math.min(100,v*4)}%"></i></div></div>`)});
+ document.getElementById("production").innerHTML=rows.join("")
+}
+function label(k){return {wood:"Древесина",stone:"Камень",ore:"Руда",food:"Еда",energy:"Энергия",crystal:"Кристаллы",water:"Вода"}[k]||k}
+function economy(){let tax=S.cities.length*35+S.pop*2,cost=S.territories.length*3+S.roads.length*2;document.getElementById("tax").textContent=tax+" AUR";document.getElementById("cost").textContent=cost+" AUR";document.getElementById("daily").textContent=(tax-cost>=0?"+":"")+fmt(tax-cost)+" AUR/день"}
+function nextDay(){
+ S.day++;
+ let total={wood:0,stone:0,ore:0,food:0,energy:0,crystal:0,water:0};
+ S.territories.forEach(i=>{let t=typeList[i],k=TYPES[t].out,r=productionRate(i);let stock=resourceStock(i);if(["mine","crystal","mountain"].includes(t)){r=Math.min(r,Math.max(0,stock));S.stock[i]=Math.max(0,stock-r)}total[k]=(total[k]||0)+r});
+ S.wood+=total.wood;S.stone+=total.stone;S.ore+=total.ore;S.food+=total.food;S.energy+=total.energy;S.crystal+=total.crystal;S.water+=total.water; runFactories();
+ let need=Math.ceil(S.pop*.65),foodOk=S.food>=need;S.food=Math.max(0,S.food-need);
+ if(foodOk&&S.energy>=Math.ceil(S.pop*.25)){S.energy-=Math.ceil(S.pop*.25);if(S.day%3===0)S.pop+=Math.max(1,S.cities.length)}
+ else if(!foodOk){S.pop=Math.max(1,S.pop-1);log("Нехватка еды: население сократилось")}
+ let contractIncome=(S.contracts||[]).length*18; let income=S.cities.length*35+S.pop*2+contractIncome-(S.territories.length*3+S.roads.length*2);S.aur=Math.max(0,S.aur+income);
+ if(S.day%2===0)updateDemand();
+ log("День завершён. Производство: "+Object.entries(total).filter(x=>x[1]).map(x=>"+"+x[1]+" "+label(x[0])).join(", "));
+ render()
+}
+function openMarket(){
+ let html="<h2>¤ Рынок AURORA</h2><p class='muted'>Цены меняются каждые 4 дня. Торгуйте ресурсами, чтобы финансировать расширение.</p>";
+ ["wood","stone","ore","metal","parts","food","energy","crystal","water"].forEach(k=>{let have=S[k]||0;html+=`<div class="row"><div><b>${label(k)}</b><div class="muted">У вас: ${fmt(have)} · ${prices[k]} AUR/ед.</div></div><div style="display:flex;gap:5px"><button class="btn" onclick="sell('${k}')">−10</button><button class="btn primary" onclick="buy('${k}')">+10</button></div></div>`});
+ document.getElementById("modalBody").innerHTML=html;document.getElementById("modal").classList.add("open")
+}
+function sell(k){if((S[k]||0)<10)return;S[k]-=10;S.aur+=prices[k]*10;log("Продано 10 "+label(k));openMarket();render()}
+function buy(k){let c=prices[k]*10;if(S.aur<c)return;S.aur-=c;S[k]=(S[k]||0)+10;log("Куплено 10 "+label(k));openMarket();render()}
+function openCity(){
+ let html="<h2>🏙 Города</h2>";
+ if(!S.cities.length)html+="<p class='muted'>Городов пока нет. Освойте несколько соседних земель и основайте первый город.</p>";
+ S.cities.forEach(c=>{let roads=S.roads.filter(r=>r.includes(c.territory)).length;html+=`<div class="card" style="margin:8px 0"><b>${c.name}</b><p>Население региона: ${S.pop} · уровень ${c.level} · дорог: ${roads}</p><button class="btn primary" onclick="upgradeCity(${c.territory})">Улучшить город · 350 AUR</button></div>`});
+ document.getElementById("modalBody").innerHTML=html;document.getElementById("modal").classList.add("open")
+}
+function upgradeCity(i){let c=cityAt(i);if(!c||S.aur<350||S.stone<40||S.metal<10)return;S.aur-=350;S.stone-=40;S.metal-=10;c.level++;S.pop+=12;S.storage+=100; if((S.citySpecs[i]||"") === "farming") S.pop+=3; log(c.name+" вырос до уровня "+c.level);openCity();render()}
+function closeModal(){document.getElementById("modal").classList.remove("open")}
+function focusMap(){document.querySelector(".mapbox").scrollIntoView({behavior:"smooth",block:"center"})}
+function newGame(){if(confirm("Начать новую колонию?")){localStorage.removeItem("aurora90");location.reload()}}
+render();
+</script>
+</body>
+</html>
